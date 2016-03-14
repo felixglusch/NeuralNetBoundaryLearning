@@ -1,0 +1,73 @@
+       for (int generation = 0; generation < 800; generation++) {
+            for (int i = 0; i < agentSet.length; i++) {
+                // answer is 1 if inside the inner bounder, -1 is outside
+                int answer = 1;
+                // if outside inner bound
+                if (agentSet[i].getXPosition() >= INNER_BOUNDARY_MAX ||
+                        agentSet[i].getXPosition() <= INNER_BOUNDARY_MIN ||
+                        agentSet[i].getYPosition() >= INNER_BOUNDARY_MAX ||
+                        agentSet[i].getYPosition() <= INNER_BOUNDARY_MIN) {
+                    answer = -1;
+                    System.out.println("at boundary");
+                    System.out.println("direction: " + direction);
+                    atBounds += 1;
+
+                    if (agentSet[i].getXPosition() == INNER_BOUNDARY_MAX && direction == 2)
+                        nextX = agentSet[i].getXPosition() + 1;
+                    else if (agentSet[i].getYPosition() == INNER_BOUNDARY_MAX && direction == 0)
+                        nextY = agentSet[i].getYPosition() + 1;
+                    else if (agentSet[i].getXPosition() == INNER_BOUNDARY_MIN && direction == 3)
+                        nextX = agentSet[i].getXPosition() - 1;
+                    else if (agentSet[i].getYPosition() == INNER_BOUNDARY_MIN && direction == 1)
+                        nextY = agentSet[i].getYPosition() - 1;
+
+                    guess = brain.feedForward(new int[]{nextX, nextY});
+                    System.out.println("guess " + guess + " where ans = -1");
+
+                    if (guess < 0) {
+                        if (direction == 2) direction += 1;
+                        else direction = Math.abs(direction - 1);
+
+                        System.out.println("X Pos: " + agentSet[i].getXPosition() + " . Y Pos: " + agentSet[i].getYPosition());
+                        System.out.println("********");
+                        moveAgent(direction, agentSet[i], guess);
+                        System.out.println("X Pos: " + agentSet[i].getXPosition() + " . Y Pos: " + agentSet[i].getYPosition());
+                    }
+
+                    System.out.println("direction: " + direction);
+                }
+
+                int x = 0;
+                int y = 0;
+
+                if (agentSet[i].getXPosition() == INNER_BOUNDARY_MAX && direction == 2)
+                    x = agentSet[i].getXPosition() + 1;
+                else if (agentSet[i].getYPosition() == INNER_BOUNDARY_MAX && direction == 0)
+                    y = agentSet[i].getYPosition() + 1;
+                else if (agentSet[i].getXPosition() == INNER_BOUNDARY_MIN && direction == 3)
+                    x = agentSet[i].getXPosition() - 1;
+                else if (agentSet[i].getYPosition() == INNER_BOUNDARY_MIN && direction == 1)
+                    y = agentSet[i].getYPosition() - 1;
+
+                trainingDataSet[i] = new Trainer(x, y, answer);
+                // Train the agents to not cross the inner boundary
+                brain.train(Trainer.getInputs(), Trainer.getAnswer());
+                System.out.println("inputs " + Arrays.toString(Trainer.getInputs()));
+                System.out.println("answer " + Trainer.getAnswer());
+
+                guess = brain.feedForward(new int[]{agentSet[i].getXPosition(), agentSet[i].getYPosition()});
+
+                moveAgent(direction, agentSet[i], guess);
+
+                if (agentSet[i].getXPosition() > INNER_BOUNDARY_MAX ||
+                        agentSet[i].getXPosition() < INNER_BOUNDARY_MIN ||
+                        agentSet[i].getYPosition() > INNER_BOUNDARY_MAX ||
+                        agentSet[i].getYPosition() < INNER_BOUNDARY_MIN ) {
+                    infractions += 1;
+                }
+
+            }
+            logPerformance(atBounds, infractions, generation);
+
+            print();
+        }
